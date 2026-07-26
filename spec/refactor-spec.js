@@ -72,6 +72,10 @@ describe("refactor", () => {
     return provider;
   }
 
+  function resultFor(newName) {
+    return { outcome: "edits", edits: editsFor(newName) };
+  }
+
   function editsFor(newName) {
     return new Map([
       [
@@ -137,7 +141,7 @@ describe("refactor", () => {
     const provider = addProvider({
       rename: jasmine
         .createSpy("rename")
-        .and.callFake(async (_editor, _position, newName) => editsFor(newName)),
+        .and.callFake(async (_editor, _position, newName) => resultFor(newName)),
     });
 
     const dialog = await invokeRename();
@@ -204,6 +208,85 @@ describe("refactor", () => {
     expect(fs.readFileSync(pathC, "utf8")).toBe("aaa ccc\n");
     expect(atom.notifications.getNotifications().length).toBe(0);
     expect(findDialog()).toBeNull();
+  });
+
+  it("falls through to the next provider when the first one declines", async () => {
+    const declining = addProvider();
+    const accepting = {
+      priority: 0,
+      packageName: "refactor-spec-fallback",
+      get grammarScopes() {
+        return [editorA.getGrammar().scopeName];
+      },
+      rename: jasmine
+        .createSpy("rename")
+        .and.callFake(async (_editor, _position, newName) => resultFor(newName)),
+    };
+    const fallbackDisposable = mainModule.consumeRefactor(accepting);
+
+    const dialog = await invokeRename();
+    dialog.refs.queryEditor.setText("zzz");
+    atom.commands.dispatch(dialog.element, "core:confirm");
+
+    await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
+    expect(declining.rename).toHaveBeenCalled();
+    expect(accepting.rename).toHaveBeenCalled();
+    fallbackDisposable.dispose();
+  });
+
+  it("stops without falling through when the provider aborts applying", async () => {
+    const aborting = addProvider({
+      rename: jasmine.createSpy("rename").and.resolveTo({ outcome: "aborted" }),
+    });
+    const fallback = {
+      priority: 0,
+      packageName: "refactor-spec-fallback",
+      get grammarScopes() {
+        return [editorA.getGrammar().scopeName];
+      },
+      rename: jasmine
+        .createSpy("rename")
+        .and.callFake(async (_editor, _position, newName) => resultFor(newName)),
+    };
+    const fallbackDisposable = mainModule.consumeRefactor(fallback);
+
+    const dialog = await invokeRename();
+    dialog.refs.queryEditor.setText("zzz");
+    atom.commands.dispatch(dialog.element, "core:confirm");
+
+    await until(() => aborting.rename.calls.count() === 1, "the provider to be invoked");
+    await settle();
+
+    // Aborting is the provider's final word: renaming again through another
+    // provider would defeat the user declining it.
+    expect(fallback.rename).not.toHaveBeenCalled();
+    expect(editorA.getText()).toBe("aaa bbb aaa\n");
+    expect(atom.notifications.getNotifications().length).toBe(0);
+    fallbackDisposable.dispose();
+  });
+
+  it("applies nothing itself when the provider already applied the edit", async () => {
+    atom.config.set("refactor.offerUndoNotification", true);
+    const provider = addProvider({
+      rename: jasmine
+        .createSpy("rename")
+        .and.resolveTo({ outcome: "applied", paths: [pathA, pathB] }),
+    });
+
+    const dialog = await invokeRename();
+    dialog.refs.queryEditor.setText("zzz");
+    atom.commands.dispatch(dialog.element, "core:confirm");
+
+    await until(
+      () => atom.notifications.getNotifications().length === 1,
+      "the success notification to appear",
+    );
+    expect(provider.rename).toHaveBeenCalled();
+    // The provider owns those edits; the buffers here are untouched by us.
+    expect(editorA.getText()).toBe("aaa bbb aaa\n");
+    const notification = atom.notifications.getNotifications()[0];
+    expect(notification.getType()).toBe("success");
+    expect(notification.getOptions().description).toContain("2 files");
   });
 
   it("reports a provider error as a notification", async () => {
