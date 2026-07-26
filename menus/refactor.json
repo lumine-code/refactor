@@ -1,0 +1,10 @@
+{
+  "context-menu": {
+    "atom-text-editor:not([mini])": [
+      {
+        "label": "Rename Symbol",
+        "command": "refactor:rename"
+      }
+    ]
+  }
+}

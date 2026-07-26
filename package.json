@@ -1,0 +1,60 @@
+{
+  "name": "refactor",
+  "author": "lumine-code",
+  "description": "Rename symbols across the project via provider-backed edits.",
+  "repository": "https://github.com/lumine-code/refactor",
+  "bugs": {
+    "url": "https://github.com/lumine-code/refactor/issues"
+  },
+  "keywords": [
+    "rename",
+    "symbol",
+    "workspace-edit",
+    "multi-file",
+    "lsp"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.100.0 <2.0.0"
+  },
+  "main": "./lib/main",
+  "scripts": {
+    "test": "cd ../lumine && npm run test:only -- ../refactor/spec",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "consumedServices": {
+    "refactor": {
+      "versions": {
+        "^1.0.0": "consumeRefactor"
+      }
+    }
+  },
+  "dependencies": {
+    "@lumine-code/select-list": "https://github.com/lumine-code/select-list.git#fbbc2d9660db6a2ff676c7a3baf7536f96ec34e6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.2.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.6"
+  },
+  "configSchema": {
+    "saveAfterEditInOpenBuffers": {
+      "title": "Save After Edit In Open Buffers",
+      "description": "Save open buffers touched by a rename **if** they had no unrelated pending changes at the time of the rename. Files that were not open in the workspace are always saved.",
+      "type": "boolean",
+      "default": false
+    },
+    "offerUndoNotification": {
+      "title": "Offer Undo Notification",
+      "description": "Show a notification after a successful rename that lists the affected files and offers an Undo button.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
