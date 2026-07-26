@@ -26,7 +26,7 @@
     "format:check": "prettier --check ."
   },
   "consumedServices": {
-    "refactor": {
+    "refactor.provider": {
       "versions": {
         "^1.0.0": "consumeRefactor"
       }

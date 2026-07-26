@@ -25,7 +25,7 @@ Commands available in `atom-text-editor`:
 
 ## Services
 
-- **refactor** (`^1.0.0`): consumed to request rename edits from providers such as IDE backend packages.
+- **refactor.provider** (`^1.0.0`): consumed to request rename edits from providers such as IDE backend packages.
 
 ## Contributing
 

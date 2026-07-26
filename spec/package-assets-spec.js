@@ -35,10 +35,12 @@ describe("refactor package assets", () => {
     expect(read("README.md").split("\n")[2]).toBe(pkg.description);
   });
 
-  it("consumes the refactor service at ^1.0.0", () => {
+  it("consumes the refactor.provider service at ^1.0.0", () => {
     const pkg = JSON.parse(read("package.json"));
-    expect(pkg.consumedServices.refactor.versions["^1.0.0"]).toBe("consumeRefactor");
-    expect(pkg.providedServices).toBeUndefined();
+    expect(pkg.consumedServices["refactor.provider"].versions["^1.0.0"]).toBe("consumeRefactor");
+    // The bare name was the hub's own package name, which said nothing about
+    // what crosses the boundary.
+    expect(pkg.consumedServices["refactor"]).toBeUndefined();
   });
 
   it("keeps its settings in the refactor namespace without order keys", () => {
