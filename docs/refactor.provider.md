@@ -9,7 +9,7 @@ Renames a symbol across the project, and optionally validates the rename before 
 | Consumed by | `consumeRefactor(provider)` returning a `Disposable`  |
 | Owner       | [`refactor`](https://github.com/lumine-code/refactor) |
 
-A language server reaches this through an [`ide-client`](https://lumine-code.github.io/docs.html#services/ide-client) adapter. Implement it directly for a renamer that is not a language server.
+A language server reaches this through an `ide-client` adapter. Implement it directly for a renamer that is not a language server.
 
 ## Registration
 
