@@ -32,7 +32,7 @@ describe("refactor package assets", () => {
     expect(pkg.repository).toBe("https://github.com/lumine-code/refactor");
     expect(pkg.bugs.url).toBe("https://github.com/lumine-code/refactor/issues");
     expect(pkg.description).toBe("Rename symbols across the project via provider-backed edits.");
-    expect(read("README.md").split("\n")[2]).toBe(pkg.description);
+    expect(read("README.md").split(/\r?\n/)[2]).toBe(pkg.description);
   });
 
   it("consumes the refactor.provider service at ^1.0.0", () => {
@@ -55,13 +55,15 @@ describe("refactor package assets", () => {
     }
   });
 
-  it("replaces the hand-rolled dialog with @lumine-code/select-list and drops dedent", () => {
+  it("replaces the hand-rolled dialog with the editor's input dialog and drops dedent", () => {
     const pkg = JSON.parse(read("package.json"));
-    expect(pkg.dependencies["@lumine-code/select-list"]).toBeDefined();
-    expect(pkg.dependencies.dedent).toBeUndefined();
+    // The dialog comes from atom.workspace.buildInputDialog, so the package
+    // declares no dependency for it at all.
+    expect(pkg.dependencies).toBeUndefined();
     expect(exists("lib/dialog.js")).toBe(false);
     expect(exists("lib/element-builder.js")).toBe(false);
-    expect(read("lib/rename-dialog.js")).toContain("InputDialogView");
+    expect(read("lib/rename-dialog.js")).toContain("atom.workspace.buildInputDialog");
+    expect(read("lib/rename-dialog.js")).not.toContain("@lumine-code/select-list");
   });
 
   it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {
