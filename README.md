@@ -7,7 +7,7 @@ Place the cursor on a symbol and run the rename command. A provider (typically a
 ## Features
 
 - **Project-wide rename**: renames every reference the provider reports, across all affected files.
-- **Prepared ranges**: providers that support prepare-rename pre-select the exact symbol range and can prefill the dialog with a placeholder name.
+- **Prepared ranges**: providers that support prepare-rename pre-select the exact symbol range and can prefill the rename prompt with a placeholder name.
 - **Transactional edits**: each buffer is edited under a checkpoint; a failure in any file reverts all of them.
 - **Unopened files**: files not open in the workspace are loaded, edited, and saved automatically; open buffers are saved only when the save setting allows it.
 - **Undo notification**: optional success notification listing the affected files with an Undo button.

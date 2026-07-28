@@ -4,6 +4,23 @@ const path = require("path");
 
 const packageRoot = path.join(__dirname, "..");
 
+// The shared modal spec helpers live in the editor checkout, which sits beside
+// this repository in CI and one level further up in the development workspace.
+// Walk up rather than committing to either depth.
+function requireModalHelpers() {
+  let directory = packageRoot;
+  for (;;) {
+    const candidate = path.join(directory, "lumine", "spec", "helpers", "modal-helpers.js");
+    if (fs.existsSync(candidate)) return require(candidate);
+    const parent = path.dirname(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  throw new Error("refactor spec: could not locate the editor's modal spec helpers");
+}
+
+const { isModalOpen, queryText, setQuery, confirm, cancel, statusText } = requireModalHelpers();
+
 // Polls a real-clock condition; requires jasmine.useRealClock().
 async function until(predicate, description = "condition", timeout = 8000) {
   const start = Date.now();
@@ -124,17 +141,13 @@ describe("refactor", () => {
     ]);
   }
 
-  function findDialog() {
-    const panel = atom.workspace
-      .getModalPanels()
-      .find((p) => p.isVisible() && p.getItem().element?.classList?.contains("refactor-dialog"));
-    return panel ? panel.getItem() : null;
-  }
-
   async function invokeRename() {
     atom.commands.dispatch(atom.views.getView(editorA), "refactor:rename");
-    await until(() => findDialog() !== null, "the rename dialog to appear");
-    return findDialog();
+    // `isOpen()` is true from the synchronous `open()` call, which is before
+    // `willOpen` has resolved and before the frame is mounted — so the query is
+    // not prefilled yet. Settle once more so assertions read the mounted view.
+    await until(() => isModalOpen(), "the rename prompt to appear");
+    await settle();
   }
 
   it("renames across open buffers and unopened files, one undo step per buffer", async () => {
@@ -144,12 +157,13 @@ describe("refactor", () => {
         .and.callFake(async (_editor, _position, newName) => resultFor(newName)),
     });
 
-    const dialog = await invokeRename();
-    // The dialog is prefilled with the word under the cursor.
-    expect(dialog.refs.queryEditor.getText()).toBe("aaa");
+    await invokeRename();
+    // The prompt is prefilled with the word under the cursor.
+    expect(queryText()).toBe("aaa");
+    expect(statusText()).toContain("Enter the new symbol name.");
 
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    setQuery("zzz");
+    confirm();
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "editor A to be renamed");
     await until(() => editorB.getText() === "xxx zzz\n", "editor B to be renamed");
@@ -158,7 +172,7 @@ describe("refactor", () => {
       "the unopened file to be renamed and saved",
     );
     expect(provider.rename).toHaveBeenCalledWith(editorA, jasmine.anything(), "zzz");
-    expect(findDialog()).toBeNull();
+    expect(isModalOpen()).toBe(false);
 
     // Open buffers are not saved by default.
     expect(editorA.isModified()).toBe(true);
@@ -182,23 +196,23 @@ describe("refactor", () => {
       }),
     });
 
-    const dialog = await invokeRename();
+    await invokeRename();
     expect(editorA.getSelectedBufferRange().serialize()).toEqual([
       [0, 8],
       [0, 11],
     ]);
-    expect(dialog.refs.queryEditor.getText()).toBe("prepared");
+    expect(queryText()).toBe("prepared");
 
-    atom.commands.dispatch(dialog.element, "core:cancel");
-    await until(() => findDialog() === null, "the dialog to close");
+    cancel();
+    await until(() => !isModalOpen(), "the prompt to close");
   });
 
   it("shows nothing and raises no error when the provider resolves null", async () => {
     const provider = addProvider();
 
-    const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    setQuery("zzz");
+    confirm();
 
     await until(() => provider.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -207,7 +221,7 @@ describe("refactor", () => {
     expect(editorB.getText()).toBe("xxx aaa\n");
     expect(fs.readFileSync(pathC, "utf8")).toBe("aaa ccc\n");
     expect(atom.notifications.getNotifications().length).toBe(0);
-    expect(findDialog()).toBeNull();
+    expect(isModalOpen()).toBe(false);
   });
 
   it("falls through to the next provider when the first one declines", async () => {
@@ -224,9 +238,9 @@ describe("refactor", () => {
     };
     const fallbackDisposable = mainModule.consumeRefactor(accepting);
 
-    const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    setQuery("zzz");
+    confirm();
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
     expect(declining.rename).toHaveBeenCalled();
@@ -250,9 +264,9 @@ describe("refactor", () => {
     };
     const fallbackDisposable = mainModule.consumeRefactor(fallback);
 
-    const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    setQuery("zzz");
+    confirm();
 
     await until(() => aborting.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -273,9 +287,9 @@ describe("refactor", () => {
         .and.resolveTo({ outcome: "applied", paths: [pathA, pathB] }),
     });
 
-    const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    setQuery("zzz");
+    confirm();
 
     await until(
       () => atom.notifications.getNotifications().length === 1,
@@ -294,9 +308,9 @@ describe("refactor", () => {
       rename: jasmine.createSpy("rename").and.rejectWith(new Error("cannot rename this")),
     });
 
-    const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    setQuery("zzz");
+    confirm();
 
     await until(
       () => atom.notifications.getNotifications().length === 1,
@@ -311,10 +325,10 @@ describe("refactor", () => {
   it("does not invoke the provider when the name is unchanged", async () => {
     const provider = addProvider();
 
-    const dialog = await invokeRename();
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    await invokeRename();
+    confirm();
 
-    await until(() => findDialog() === null, "the dialog to close");
+    await until(() => !isModalOpen(), "the prompt to close");
     await settle();
     expect(provider.rename).not.toHaveBeenCalled();
   });
@@ -332,7 +346,7 @@ describe("refactor", () => {
       "the no-provider notification to appear",
     );
     expect(atom.notifications.getNotifications()[0].getType()).toBe("error");
-    expect(findDialog()).toBeNull();
+    expect(isModalOpen()).toBe(false);
   });
 
   it("lists registered providers in a notification", async () => {

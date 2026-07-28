@@ -7,7 +7,8 @@ const exists = (rel) => fs.existsSync(path.join(root, rel));
 
 // Guards for the pulsar-refactor -> refactor rebrand and modernization. The
 // command prefix, config namespace, and package name all move to `refactor`;
-// the hand-rolled dialog and the dedent dependency are gone.
+// the hand-rolled dialog and the dedent dependency are gone, and the prompt is
+// the editor's own modal rather than a bundled dialog library.
 describe("refactor package assets", () => {
   it("ships the keymap and menu as JSON under the refactor name", () => {
     expect(exists("keymaps/refactor.json")).toBe(true);
@@ -55,13 +56,15 @@ describe("refactor package assets", () => {
     }
   });
 
-  it("replaces the hand-rolled dialog with @lumine-code/select-list and drops dedent", () => {
+  it("prompts through atom.modals and ships no runtime dependencies", () => {
     const pkg = JSON.parse(read("package.json"));
-    expect(pkg.dependencies["@lumine-code/select-list"]).toBeDefined();
-    expect(pkg.dependencies.dedent).toBeUndefined();
+    // The prompt is one `atom.modals.input` call, so there is nothing left to
+    // depend on at runtime: no dialog library, no dedent, no view class.
+    expect(pkg.dependencies).toBeUndefined();
     expect(exists("lib/dialog.js")).toBe(false);
     expect(exists("lib/element-builder.js")).toBe(false);
-    expect(read("lib/rename-dialog.js")).toContain("InputDialogView");
+    expect(exists("lib/rename-dialog.js")).toBe(false);
+    expect(read("lib/main.js")).toContain("atom.modals.input");
   });
 
   it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {
