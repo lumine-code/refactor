@@ -16,7 +16,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "engines": {
-    "lumine": ">=1.100.0 <2.0.0"
+    "lumine": "^1.0.0"
   },
   "backgroundTips": [
     "You can rename the symbol under the cursor across the project with {{ 'refactor:rename' | keystroke }}"
