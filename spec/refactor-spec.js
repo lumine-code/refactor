@@ -236,6 +236,15 @@ describe("refactor", () => {
     atom.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
+    // The edits reach an unopened file too, which is loaded and saved rather
+    // than applied to a buffer. Waiting only on the open editor lets the spec
+    // end mid-save, and teardown then removes the directory out from under it
+    // -- the save fails, and the error notification it raises lands in
+    // whichever spec is running by then.
+    await until(
+      () => fs.readFileSync(pathC, "utf8") === "zzz ccc\n",
+      "the unopened file to finish saving",
+    );
     expect(declining.rename).toHaveBeenCalled();
     expect(accepting.rename).toHaveBeenCalled();
     fallbackDisposable.dispose();
