@@ -17,6 +17,11 @@ async function until(predicate, description = "condition", timeout = 8000) {
 
 const settle = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Named rather than counted, so a leaked notification names itself in the
+// failure instead of reporting "expected 1 to be 0".
+const notificationSummaries = () =>
+  atom.notifications.getNotifications().map((n) => `${n.getType()}: ${n.getMessage()}`);
+
 describe("refactor", () => {
   let mainModule;
   let providerDisposable;
@@ -55,7 +60,9 @@ describe("refactor", () => {
     for (const editor of atom.workspace.getTextEditors()) {
       editor.destroy();
     }
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    // Retries because Windows keeps a directory non-empty until the last handle on a child
+    // closes, and `force` swallows only ENOENT.
+    fs.rmSync(tempDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
   function addProvider(overrides = {}) {
@@ -206,7 +213,7 @@ describe("refactor", () => {
     expect(editorA.getText()).toBe("aaa bbb aaa\n");
     expect(editorB.getText()).toBe("xxx aaa\n");
     expect(fs.readFileSync(pathC, "utf8")).toBe("aaa ccc\n");
-    expect(atom.notifications.getNotifications().length).toBe(0);
+    expect(notificationSummaries()).toEqual([]);
     expect(findDialog()).toBeNull();
   });
 
@@ -261,7 +268,7 @@ describe("refactor", () => {
     // provider would defeat the user declining it.
     expect(fallback.rename).not.toHaveBeenCalled();
     expect(editorA.getText()).toBe("aaa bbb aaa\n");
-    expect(atom.notifications.getNotifications().length).toBe(0);
+    expect(notificationSummaries()).toEqual([]);
     fallbackDisposable.dispose();
   });
 
