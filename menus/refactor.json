@@ -2,8 +2,14 @@
   "context-menu": {
     "atom-text-editor:not([mini])": [
       {
+        "type": "separator"
+      },
+      {
         "label": "Rename Symbol",
         "command": "refactor:rename"
+      },
+      {
+        "type": "separator"
       }
     ]
   }
