@@ -1,6 +1,6 @@
 {
   "context-menu": {
-    "atom-text-editor:not([mini])": [
+    "lumine-text-editor:not([mini])": [
       {
         "type": "separator"
       },

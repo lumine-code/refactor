@@ -18,7 +18,7 @@ To install `refactor` search for _refactor_ in the Install pane of the Lumine se
 
 ## Commands
 
-Commands available in `atom-text-editor`:
+Commands available in `lumine-text-editor`:
 
 - `refactor:rename`: rename the symbol under the cursor across the project,
 - `refactor:list-providers`: list the registered rename providers and their grammar scopes.

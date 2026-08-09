@@ -1,5 +1,5 @@
 {
-  "atom-text-editor:not([mini])": {
+  "lumine-text-editor:not([mini])": {
     "f2": "refactor:rename"
   }
 }

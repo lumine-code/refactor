@@ -20,7 +20,7 @@ const settle = (ms = 50) => new Promise((resolve) => setTimeout(resolve, ms));
 // Named rather than counted, so a leaked notification names itself in the
 // failure instead of reporting "expected 1 to be 0".
 const notificationSummaries = () =>
-  atom.notifications.getNotifications().map((n) => `${n.getType()}: ${n.getMessage()}`);
+  lumine.notifications.getNotifications().map((n) => `${n.getType()}: ${n.getMessage()}`);
 
 describe("refactor", () => {
   let mainModule;
@@ -34,8 +34,8 @@ describe("refactor", () => {
 
   beforeEach(async () => {
     jasmine.useRealClock();
-    jasmine.attachToDOM(atom.views.getView(atom.workspace));
-    atom.notifications.clear();
+    jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
+    lumine.notifications.clear();
 
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "refactor-spec-"));
     pathA = path.join(tempDir, "a.js");
@@ -45,19 +45,19 @@ describe("refactor", () => {
     fs.writeFileSync(pathB, "xxx aaa\n");
     fs.writeFileSync(pathC, "aaa ccc\n");
 
-    const pack = await atom.packages.activatePackage(packageRoot);
+    const pack = await lumine.packages.activatePackage(packageRoot);
     mainModule = pack.mainModule;
 
-    editorB = await atom.workspace.open(pathB);
-    editorA = await atom.workspace.open(pathA);
+    editorB = await lumine.workspace.open(pathB);
+    editorA = await lumine.workspace.open(pathA);
     editorA.setCursorBufferPosition([0, 1]);
   });
 
   afterEach(async () => {
     providerDisposable?.dispose();
     providerDisposable = null;
-    await atom.packages.deactivatePackage("refactor");
-    for (const editor of atom.workspace.getTextEditors()) {
+    await lumine.packages.deactivatePackage("refactor");
+    for (const editor of lumine.workspace.getTextEditors()) {
       editor.destroy();
     }
     // Retries because Windows keeps a directory non-empty until the last handle on a child
@@ -132,14 +132,14 @@ describe("refactor", () => {
   }
 
   function findDialog() {
-    const panel = atom.workspace
+    const panel = lumine.workspace
       .getModalPanels()
       .find((p) => p.isVisible() && p.getItem().element?.classList?.contains("refactor-dialog"));
     return panel ? panel.getItem() : null;
   }
 
   async function invokeRename() {
-    atom.commands.dispatch(atom.views.getView(editorA), "refactor:rename");
+    lumine.commands.dispatch(lumine.views.getView(editorA), "refactor:rename");
     await until(() => findDialog() !== null, "the rename dialog to appear");
     return findDialog();
   }
@@ -156,7 +156,7 @@ describe("refactor", () => {
     expect(dialog.refs.queryEditor.getText()).toBe("aaa");
 
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "editor A to be renamed");
     await until(() => editorB.getText() === "xxx zzz\n", "editor B to be renamed");
@@ -196,7 +196,7 @@ describe("refactor", () => {
     ]);
     expect(dialog.refs.queryEditor.getText()).toBe("prepared");
 
-    atom.commands.dispatch(dialog.element, "core:cancel");
+    lumine.commands.dispatch(dialog.element, "core:cancel");
     await until(() => findDialog() === null, "the dialog to close");
   });
 
@@ -205,7 +205,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => provider.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -233,7 +233,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
     // The edits reach an unopened file too, which is loaded and saved rather
@@ -268,7 +268,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => aborting.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -282,7 +282,7 @@ describe("refactor", () => {
   });
 
   it("applies nothing itself when the provider already applied the edit", async () => {
-    atom.config.set("refactor.offerUndoNotification", true);
+    lumine.config.set("refactor.offerUndoNotification", true);
     const provider = addProvider({
       rename: jasmine
         .createSpy("rename")
@@ -291,16 +291,16 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(
-      () => atom.notifications.getNotifications().length === 1,
+      () => lumine.notifications.getNotifications().length === 1,
       "the success notification to appear",
     );
     expect(provider.rename).toHaveBeenCalled();
     // The provider owns those edits; the buffers here are untouched by us.
     expect(editorA.getText()).toBe("aaa bbb aaa\n");
-    const notification = atom.notifications.getNotifications()[0];
+    const notification = lumine.notifications.getNotifications()[0];
     expect(notification.getType()).toBe("success");
     expect(notification.getOptions().description).toContain("2 files");
   });
@@ -312,13 +312,13 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.refs.queryEditor.setText("zzz");
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(
-      () => atom.notifications.getNotifications().length === 1,
+      () => lumine.notifications.getNotifications().length === 1,
       "the error notification to appear",
     );
-    const notification = atom.notifications.getNotifications()[0];
+    const notification = lumine.notifications.getNotifications()[0];
     expect(notification.getType()).toBe("error");
     expect(notification.getOptions().detail).toBe("cannot rename this");
     expect(editorA.getText()).toBe("aaa bbb aaa\n");
@@ -328,7 +328,7 @@ describe("refactor", () => {
     const provider = addProvider();
 
     const dialog = await invokeRename();
-    atom.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => findDialog() === null, "the dialog to close");
     await settle();
@@ -342,24 +342,24 @@ describe("refactor", () => {
       },
     });
 
-    atom.commands.dispatch(atom.views.getView(editorA), "refactor:rename");
+    lumine.commands.dispatch(lumine.views.getView(editorA), "refactor:rename");
     await until(
-      () => atom.notifications.getNotifications().length === 1,
+      () => lumine.notifications.getNotifications().length === 1,
       "the no-provider notification to appear",
     );
-    expect(atom.notifications.getNotifications()[0].getType()).toBe("error");
+    expect(lumine.notifications.getNotifications()[0].getType()).toBe("error");
     expect(findDialog()).toBeNull();
   });
 
   it("lists registered providers in a notification", async () => {
     addProvider();
 
-    atom.commands.dispatch(atom.views.getView(editorA), "refactor:list-providers");
+    lumine.commands.dispatch(lumine.views.getView(editorA), "refactor:list-providers");
     await until(
-      () => atom.notifications.getNotifications().length === 1,
+      () => lumine.notifications.getNotifications().length === 1,
       "the provider list notification to appear",
     );
-    const notification = atom.notifications.getNotifications()[0];
+    const notification = lumine.notifications.getNotifications()[0];
     expect(notification.getType()).toBe("info");
     expect(notification.getOptions().description).toContain("refactor-spec-stub");
   });
