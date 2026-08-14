@@ -14,7 +14,7 @@ Place the cursor on a symbol and run the rename command. A provider (typically a
 
 ## Installation
 
-To install `refactor` search for _refactor_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/refactor`.
+To install `refactor` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/refactor`.
 
 ## Commands
 
@@ -25,7 +25,7 @@ Commands available in `lumine-text-editor`:
 
 ## Services
 
-- **[refactor.provider](docs/refactor.provider.md)** (`^1.0.0`): consumed to request rename edits from providers such as IDE backend packages.
+- [`refactor.provider`](docs/refactor.provider.md): consumed to request rename edits from providers such as IDE backend packages.
 
 ## Contributing
 
