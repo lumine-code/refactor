@@ -10,15 +10,15 @@ const exists = (rel) => fs.existsSync(path.join(root, rel));
 // the hand-rolled dialog and the dedent dependency are gone.
 describe("refactor package assets", () => {
   it("ships the keymap and menu as JSON under the refactor name", () => {
-    expect(exists("keymaps/refactor.json")).toBe(true);
-    expect(exists("menus/refactor.json")).toBe(true);
+    expect(exists("keymaps/main.json")).toBe(true);
+    expect(exists("menus/main.json")).toBe(true);
     expect(exists("keymaps/pulsar-refactor.json")).toBe(false);
     expect(exists("menus/pulsar-refactor.json")).toBe(false);
 
-    const keymap = JSON.parse(read("keymaps/refactor.json"));
+    const keymap = JSON.parse(read("keymaps/main.json"));
     expect(keymap["lumine-text-editor:not([mini])"]["f2"]).toBe("refactor:rename");
 
-    const menu = JSON.parse(read("menus/refactor.json"));
+    const menu = JSON.parse(read("menus/main.json"));
     const flat = JSON.stringify(menu);
     expect(flat).toContain("Rename Symbol");
     expect(flat).toContain("refactor:rename");
@@ -67,7 +67,7 @@ describe("refactor package assets", () => {
   });
 
   it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {
-    const files = ["README.md", "keymaps/refactor.json", "menus/refactor.json"];
+    const files = ["README.md", "keymaps/main.json", "menus/main.json"];
     for (const file of fs.readdirSync(path.join(root, "lib"))) {
       files.push(`lib/${file}`);
     }
