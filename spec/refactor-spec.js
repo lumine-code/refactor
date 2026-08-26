@@ -168,8 +168,8 @@ describe("refactor", () => {
     expect(findDialog()).toBeNull();
 
     // Open buffers are not saved by default.
-    expect(editorA.isModified()).toBe(true);
-    expect(editorB.isModified()).toBe(true);
+    expect(editorA.getFileState()).toBe("modified");
+    expect(editorB.getFileState()).toBe("modified");
 
     // The edits in each buffer are grouped into a single undo step.
     editorA.undo();
