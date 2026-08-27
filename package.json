@@ -54,6 +54,7 @@
     "saveAfterEditInOpenBuffers": {
       "title": "Save After Edit In Open Buffers",
       "description": "Save open buffers touched by a rename **if** they had no unrelated pending changes at the time of the rename. Files that were not open in the workspace are always saved.",
+      "scopeResolution": "grammar",
       "type": "boolean",
       "default": false
     },
