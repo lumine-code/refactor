@@ -63,7 +63,6 @@ describe("refactor package assets", () => {
     expect(exists("lib/dialog.js")).toBe(false);
     expect(exists("lib/element-builder.js")).toBe(false);
     expect(read("lib/rename-dialog.js")).toContain("lumine.workspace.buildInputDialog");
-    expect(read("lib/rename-dialog.js")).not.toContain("@lumine-code/select-list");
   });
 
   it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {

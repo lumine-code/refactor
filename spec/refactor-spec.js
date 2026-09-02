@@ -153,9 +153,9 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     // The dialog is prefilled with the word under the cursor.
-    expect(dialog.refs.queryEditor.getText()).toBe("aaa");
+    expect(dialog.getQueryEditor().getText()).toBe("aaa");
 
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "editor A to be renamed");
@@ -194,7 +194,7 @@ describe("refactor", () => {
       [0, 8],
       [0, 11],
     ]);
-    expect(dialog.refs.queryEditor.getText()).toBe("prepared");
+    expect(dialog.getQueryEditor().getText()).toBe("prepared");
 
     lumine.commands.dispatch(dialog.element, "core:cancel");
     await until(() => findDialog() === null, "the dialog to close");
@@ -204,7 +204,7 @@ describe("refactor", () => {
     const provider = addProvider();
 
     const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => provider.rename.calls.count() === 1, "the provider to be invoked");
@@ -232,7 +232,7 @@ describe("refactor", () => {
     const fallbackDisposable = mainModule.consumeRefactor(accepting);
 
     const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
@@ -267,7 +267,7 @@ describe("refactor", () => {
     const fallbackDisposable = mainModule.consumeRefactor(fallback);
 
     const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(() => aborting.rename.calls.count() === 1, "the provider to be invoked");
@@ -290,7 +290,7 @@ describe("refactor", () => {
     });
 
     const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(
@@ -311,7 +311,7 @@ describe("refactor", () => {
     });
 
     const dialog = await invokeRename();
-    dialog.refs.queryEditor.setText("zzz");
+    dialog.getQueryEditor().setText("zzz");
     lumine.commands.dispatch(dialog.element, "core:confirm");
 
     await until(
