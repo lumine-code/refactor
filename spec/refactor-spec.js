@@ -134,10 +134,8 @@ describe("refactor", () => {
   function findDialog() {
     const panel = lumine.workspace
       .getModalPanels()
-      .find(
-        (p) => p.isVisible() && p.getItem().getElement?.()?.classList?.contains("refactor-dialog"),
-      );
-    return panel ? panel.getItem() : null;
+      .find((p) => p.isVisible() && p.getElement().classList.contains("refactor-dialog"));
+    return panel?.getItem() ?? null;
   }
 
   async function invokeRename() {

@@ -57,12 +57,12 @@ describe("refactor package assets", () => {
 
   it("replaces the hand-rolled dialog with the editor's input dialog and drops dedent", () => {
     const pkg = JSON.parse(read("package.json"));
-    // The dialog comes from lumine.workspace.buildInputDialog, so the package
+    // The dialog comes from lumine.workspace.addInputDialog, so the package
     // declares no dependency for it at all.
     expect(pkg.dependencies).toBeUndefined();
     expect(exists("lib/dialog.js")).toBe(false);
     expect(exists("lib/element-builder.js")).toBe(false);
-    expect(read("lib/rename-dialog.js")).toContain("lumine.workspace.buildInputDialog");
+    expect(read("lib/rename-dialog.js")).toContain("lumine.workspace.addInputDialog");
   });
 
   it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {
