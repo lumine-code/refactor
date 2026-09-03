@@ -134,7 +134,9 @@ describe("refactor", () => {
   function findDialog() {
     const panel = lumine.workspace
       .getModalPanels()
-      .find((p) => p.isVisible() && p.getItem().element?.classList?.contains("refactor-dialog"));
+      .find(
+        (p) => p.isVisible() && p.getItem().getElement?.()?.classList?.contains("refactor-dialog"),
+      );
     return panel ? panel.getItem() : null;
   }
 
@@ -156,7 +158,7 @@ describe("refactor", () => {
     expect(dialog.getQueryEditor().getText()).toBe("aaa");
 
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "editor A to be renamed");
     await until(() => editorB.getText() === "xxx zzz\n", "editor B to be renamed");
@@ -196,7 +198,7 @@ describe("refactor", () => {
     ]);
     expect(dialog.getQueryEditor().getText()).toBe("prepared");
 
-    lumine.commands.dispatch(dialog.element, "core:cancel");
+    lumine.commands.dispatch(dialog.getElement(), "core:cancel");
     await until(() => findDialog() === null, "the dialog to close");
   });
 
@@ -205,7 +207,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(() => provider.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -233,7 +235,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(() => editorA.getText() === "zzz bbb zzz\n", "the fallback provider to rename");
     // The edits reach an unopened file too, which is loaded and saved rather
@@ -268,7 +270,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(() => aborting.rename.calls.count() === 1, "the provider to be invoked");
     await settle();
@@ -291,7 +293,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(
       () => lumine.notifications.getNotifications().length === 1,
@@ -312,7 +314,7 @@ describe("refactor", () => {
 
     const dialog = await invokeRename();
     dialog.getQueryEditor().setText("zzz");
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(
       () => lumine.notifications.getNotifications().length === 1,
@@ -328,7 +330,7 @@ describe("refactor", () => {
     const provider = addProvider();
 
     const dialog = await invokeRename();
-    lumine.commands.dispatch(dialog.element, "core:confirm");
+    lumine.commands.dispatch(dialog.getElement(), "core:confirm");
 
     await until(() => findDialog() === null, "the dialog to close");
     await settle();
