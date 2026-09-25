@@ -18,9 +18,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "You can rename the symbol under the cursor across the project with {{ 'refactor:rename' | keystroke }}"
-  ],
   "main": "./lib/main",
   "files": [
     "docs",
@@ -34,6 +31,13 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+  },
+  "providedServices": {
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
+    }
   },
   "consumedServices": {
     "refactor.provider": {
