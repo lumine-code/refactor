@@ -9,20 +9,14 @@ const exists = (rel) => fs.existsSync(path.join(root, rel));
 // command prefix, config namespace, and package name all move to `refactor`;
 // the hand-rolled dialog and the dedent dependency are gone.
 describe("refactor package assets", () => {
-  it("ships the keymap and menu as JSON under the refactor name", () => {
+  it("ships the keymap as JSON under the refactor name", () => {
     expect(exists("keymaps/main.json")).toBe(true);
-    expect(exists("menus/main.json")).toBe(true);
+    expect(exists("menus/main.json")).toBe(false);
     expect(exists("keymaps/pulsar-refactor.json")).toBe(false);
     expect(exists("menus/pulsar-refactor.json")).toBe(false);
 
     const keymap = JSON.parse(read("keymaps/main.json"));
     expect(keymap["lumine-text-editor:not([mini])"]["f2"]).toBe("refactor:rename");
-
-    const menu = JSON.parse(read("menus/main.json"));
-    const flat = JSON.stringify(menu);
-    expect(flat).toContain("Rename Symbol");
-    expect(flat).toContain("refactor:rename");
-    expect(flat).not.toContain("pulsar-refactor");
   });
 
   it("is named `refactor` and points at lumine-code", () => {
@@ -65,8 +59,8 @@ describe("refactor package assets", () => {
     expect(read("lib/rename-dialog.js")).toContain("lumine.workspace.addInputDialog");
   });
 
-  it("has no leftover upstream branding in lib, keymaps, menus, or README", () => {
-    const files = ["README.md", "keymaps/main.json", "menus/main.json"];
+  it("has no leftover upstream branding in lib, keymaps, or README", () => {
+    const files = ["README.md", "keymaps/main.json"];
     for (const file of fs.readdirSync(path.join(root, "lib"))) {
       files.push(`lib/${file}`);
     }
