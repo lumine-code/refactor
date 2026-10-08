@@ -155,6 +155,27 @@ describe("refactor request ownership", () => {
     await Promise.all([first, second]);
   });
 
+  it("does not retire a newer activation's reused provider when an old manual lease is disposed", async () => {
+    const provider = {
+      grammarScopes: [editor.getGrammar().scopeName],
+      rename: jasmine.createSpy("rename").and.resolveTo(null),
+    };
+    const oldLease = mainModule.consumeRefactor(provider);
+    await lumine.packages.deactivatePackage("refactor");
+    mainModule = (await lumine.packages.activatePackage("refactor")).mainModule;
+    const currentLease = mainModule.consumeRefactor(provider);
+    providers.push(currentLease);
+    const pending = mainModule.rename();
+    await conditionPromise(() => mainModule.dialog?.inputDialogHost.isVisible());
+    const request = mainModule.renameRequest;
+    oldLease.dispose();
+    expect(mainModule.providers).toContain(provider);
+    expect(mainModule.renameRequest).toBe(request);
+    expect(mainModule.dialog.inputDialogHost.isVisible()).toBe(true);
+    mainModule.dialog.finish(null);
+    await pending;
+  });
+
   it("ignores a provider edit result returned after deactivation", async () => {
     const result = deferred();
     const { provider } = provide({
