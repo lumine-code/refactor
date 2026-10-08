@@ -29,11 +29,7 @@ In your `package.json`:
 
 ```ts
 type RefactorProvider = {
-  rename(
-    editor: TextEditor,
-    position: Point,
-    newName: string,
-  ): Promise<Map<string, TextEdit[]> | null>;
+  rename(editor: TextEditor, position: Point, newName: string): Promise<RenameResult | null>;
 
   prepareRename?(
     editor: TextEditor,
@@ -44,15 +40,20 @@ type RefactorProvider = {
   priority?: number;
   packageName?: string;
 };
+
+type RenameResult =
+  | { outcome?: "edits"; edits: Map<string, TextEdit[]> }
+  | { outcome: "applied"; paths?: string[] }
+  | { outcome: "aborted" };
 ```
 
-| Member                              | Description                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------- |
-| `rename(editor, position, newName)` | Required. Resolves to a map of file path to edits, or `null` to decline.          |
-| `prepareRename(editor, position)`   | Optional. Validates the position and refines the range before the prompt appears. |
-| `grammarScopes`                     | Scope names you serve. A **live getter**, re-read on every invocation.            |
-| `priority`                          | Higher is preferred. Defaults to `0`.                                             |
-| `packageName`                       | Shown in the "Rename providers" listing.                                          |
+| Member                              | Description                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `rename(editor, position, newName)` | Required. Returns edits, an already-applied or aborted outcome, or `null` to decline. |
+| `prepareRename(editor, position)`   | Optional. Validates the position and refines the range before the prompt appears.     |
+| `grammarScopes`                     | Scope names you serve. A **live getter**, re-read on every invocation.                |
+| `priority`                          | Higher is preferred. Defaults to `0`.                                                 |
+| `packageName`                       | Shown in the "Rename providers" listing.                                              |
 
 ## Minimal example
 
@@ -76,7 +77,7 @@ module.exports = {
           list.push({ oldRange: occurrence.range, newText: newName });
           edits.set(occurrence.path, list);
         }
-        return edits;
+        return { outcome: "edits", edits };
       },
     };
   },
@@ -95,11 +96,15 @@ Renaming is refused outright when the editor has multiple selections — you wil
 
 When no provider claims the grammar, the user gets an error notification naming the problem; the `refactor:list-providers` command shows which providers are registered and what they cover.
 
-The returned map is keyed by absolute file path, and its edits are applied across every file at once.
+The `edits` map is keyed by absolute file path. Returning `{ outcome: "applied" }` means the provider already performed its own file operations and owns their undo; `{ outcome: "aborted" }` ends the operation without trying another provider.
+
+Preparation, prompts and provider responses belong to the current request, activation and editor context. Deactivation, a newer rename, a withdrawn provider or changed source context retires stale work. The provider API has no cancellation parameter: a provider may finish its own work, but retired returned edits and errors are ignored by this package.
+
+Unopened files are loaded before applying returned edits, and changed or newly opened targets invalidate that preparation. Once applying begins, the confirmed edits and saves finish; later deactivation suppresses the success UI rather than undoing already committed changes.
 
 ## Teardown
 
-`consumeRefactor` returns a `Disposable` that removes the provider. Return it from your consumer method.
+`consumeRefactor` returns a `Disposable` that removes the provider and retires requests waiting on its responses. Return it from your consumer method. Retired prompts resolve as cancelled and cannot close a newer request's prompt.
 
 ## Versioning
 
