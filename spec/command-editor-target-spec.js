@@ -22,7 +22,7 @@ describe("Refactor command editor targets", () => {
     jasmine.attachToDOM(lumine.workspace.getElement());
     first = await lumine.workspace.open(path.join(scratch, "first.txt"));
     firstPane = lumine.workspace.paneForItem(first);
-    firstPane.splitRight({ copyActiveItem: false });
+    firstPane.splitRight();
     second = await lumine.workspace.open(path.join(scratch, "second.txt"));
     for (const editor of [first, second]) editor.setCursorBufferPosition([0, 2]);
     firstPane.activate();
