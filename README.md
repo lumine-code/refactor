@@ -12,6 +12,8 @@ Place the cursor on a symbol and run the rename command. A provider (typically a
 - **Unopened files**: files not open in the workspace are loaded, edited, and saved automatically; open buffers are saved only when the save setting allows it.
 - **Undo notification**: optional success notification listing the affected files with an Undo button.
 
+![Rename a symbol through the TypeScript language server.](.github/demo.png)
+
 ## Installation
 
 To install `refactor` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/refactor`.

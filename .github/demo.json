@@ -1,0 +1,17 @@
+{
+  "title": "refactor",
+  "description": "Rename a symbol through the TypeScript language server.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "cf67e5e989c3416a9c96d694080d1b3f9504d67d",
+  "mode": "normal",
+  "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Rename a symbol through the TypeScript language server.",
+      "width": 1150,
+      "height": 600
+    }
+  ]
+}
