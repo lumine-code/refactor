@@ -5,7 +5,9 @@
       "submenu": [
         {
           "label": "Rename Symbol…",
-          "command": "refactor:rename"
+          "command": "refactor:rename",
+          "group": "refactor",
+          "order": 10
         }
       ]
     },
