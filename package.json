@@ -23,6 +23,7 @@
     "docs",
     "keymaps",
     "lib",
+    "menus",
     "spec"
   ],
   "scripts": {

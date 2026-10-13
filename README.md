@@ -18,7 +18,7 @@ To install `refactor` search for it in the Install pane of the Lumine settings, 
 
 ## Commands
 
-Commands available in non-mini `lumine-text-editor` elements:
+Commands available in `lumine-workspace`:
 
 Rename acts on the editor that invoked the command, including an inactive split editor. A direct invocation without an editor target falls back to the active editor.
 

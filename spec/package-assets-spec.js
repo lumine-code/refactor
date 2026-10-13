@@ -11,7 +11,8 @@ const exists = (rel) => fs.existsSync(path.join(root, rel));
 describe("refactor package assets", () => {
   it("ships the keymap as JSON under the refactor name", () => {
     expect(exists("keymaps/main.json")).toBe(true);
-    expect(exists("menus/main.json")).toBe(false);
+    expect(exists("menus/main.json")).toBe(true);
+    expect(JSON.parse(read("package.json")).files).toContain("menus");
     expect(exists("keymaps/pulsar-refactor.json")).toBe(false);
     expect(exists("menus/pulsar-refactor.json")).toBe(false);
 

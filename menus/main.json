@@ -1,0 +1,31 @@
+{
+  "menu": [
+    {
+      "label": "Edit",
+      "submenu": [
+        {
+          "label": "Rename Symbol…",
+          "command": "refactor:rename"
+        }
+      ]
+    },
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Refactor",
+          "submenu": [
+            {
+              "label": "Rename Symbol…",
+              "command": "refactor:rename"
+            },
+            {
+              "label": "List Providers",
+              "command": "refactor:list-providers"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

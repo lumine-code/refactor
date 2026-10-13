@@ -91,6 +91,28 @@ describe("Refactor command editor targets", () => {
     expect(first.getText()).toBe("omega\n");
     expect(second.getText()).toBe("alpha\n");
   });
+  it("renames the active document when invoked from another focused surface", async () => {
+    provide();
+    const button = document.createElement("button");
+    lumine.workspace.getElement().appendChild(button);
+    try {
+      button.focus();
+      await rename({ getElement: () => button });
+      expect(provider.rename.calls.mostRecent().args[0]).toBe(first);
+      expect(first.getText()).toBe("omega\n");
+    } finally {
+      button.remove();
+    }
+  });
+  it("explains why a menu rename with multiple cursors cannot proceed", async () => {
+    first.addCursorAtBufferPosition([0, 4]);
+    spyOn(lumine.notifications, "addWarning");
+    await lumine.commands.dispatch(lumine.workspace.getElement(), "refactor:rename");
+    expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
+      "Rename requires a single cursor or selection.",
+    );
+    expect(provider.rename).not.toHaveBeenCalled();
+  });
   it("retires an unconfirmed request when another unrelated editor becomes active", async () => {
     let finish;
     provider.prepareRename = () =>
