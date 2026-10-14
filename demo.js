@@ -37,7 +37,7 @@ module.exports = {
       caption: "Rename a symbol through the TypeScript language server.",
       timeout: 60000,
       async run(context) {
-        const { lumine, state, waitFor } = context;
+        const { lumine, state } = context;
         {
           for (let n = 0; n < 60; n++) {
             if (
@@ -74,26 +74,15 @@ module.exports = {
           state.editor.setCursorBufferPosition(message.range.start);
           state.editor.scrollToCursorPosition();
           lumine.views.getView(state.editor).focus();
-          await waitFor(
-            () =>
-              (() => {
-                const e = document.querySelector("lumine-overlay.hover-overlay");
-                const r = e?.getBoundingClientRect();
-                return (
-                  e?.innerText.includes("TypeScript Language Server") &&
-                  r.top >= 36 &&
-                  r.bottom <= innerHeight - 24
-                );
-              })(),
-            "step 1",
-            60000,
-          );
         }
         {
           lumine.commands.dispatch(lumine.views.getView(state.editor), "hover:dismiss");
           state.editor.setCursorBufferPosition([1, 12]);
-          lumine.commands.dispatch(lumine.views.getView(state.editor), "refactor:rename");
         }
+      },
+      afterPointerMove({ lumine, state }) {
+        state.editor.getElement().focus();
+        lumine.commands.dispatch(state.editor.getElement(), "refactor:rename");
       },
       ready() {
         return Boolean(
