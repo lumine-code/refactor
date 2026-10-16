@@ -102,6 +102,31 @@ describe("refactor request ownership", () => {
     fs.rmSync(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
 
+  it("retires an in-flight rename when the source becomes read-only", async () => {
+    const response = deferred();
+    const { provider } = provide({
+      rename: jasmine.createSpy("rename readonly wait").and.returnValue(response.promise),
+    });
+    const { pending } = await confirm(provider);
+    editor.setReadOnly(true);
+    response.resolve(edits());
+    await pending;
+    expect(editor.getText()).toBe("old text");
+    expect(fs.readFileSync(otherPath, "utf8")).toBe("old target");
+  });
+
+  it("rejects an entire edit set before changing any read-only target", async () => {
+    const other = await lumine.workspace.open(otherPath);
+    other.setReadOnly(true);
+    const apply = require(path.join(packagePath, "lib/apply-edits"));
+    await expectAsync(apply.execute(edits().edits)).toBeRejectedWith(
+      jasmine.objectContaining({ name: "AbortError" }),
+    );
+    expect(editor.getText()).toBe("old text");
+    expect(other.getText()).toBe("old target");
+    expect(fs.readFileSync(otherPath, "utf8")).toBe("old target");
+  });
+
   it("does not recreate a prompt when preparation completes after deactivation", async () => {
     const prepared = deferred();
     provide({ prepareRename: () => prepared.promise });
