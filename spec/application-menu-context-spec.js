@@ -70,7 +70,10 @@ describe("refactor application menu document context", () => {
     expect(context.editor).toBeUndefined();
     expect(lumine.workspace.getActiveTextEditor()).toBe(first);
     await lumine.commands.dispatch(button, "refactor:rename");
-    expect(lookup).not.toHaveBeenCalled();
+    expect(lumine.commands.canDispatch(button, "refactor:rename")).toBe(false);
+    expect(main.commandEditor({ target: button, context })).toBe(null);
+    expect(main.renameRequests.size).toBe(0);
+    expect(main.dialogs.size).toBe(0);
   });
   it("retains the active-editor fallback for programmatic requests without command context", async () => {
     await main.rename();
