@@ -343,12 +343,10 @@ describe("refactor", () => {
     });
 
     lumine.commands.dispatch(lumine.views.getView(editorA), "refactor:rename");
-    await until(
-      () => lumine.notifications.getNotifications().length === 1,
-      "the no-provider notification to appear",
+    expect(lumine.commands.canDispatch(lumine.views.getView(editorA), "refactor:rename")).toBe(
+      false,
     );
-    expect(lumine.notifications.getNotifications()[0].getType()).toBe("error");
-    expect(findDialog()).toBeNull();
+    expect(lumine.notifications.getNotifications()).toEqual([]);
   });
 
   it("lists registered providers in a notification", async () => {

@@ -104,13 +104,12 @@ describe("Refactor command editor targets", () => {
       button.remove();
     }
   });
-  it("explains why a menu rename with multiple cursors cannot proceed", async () => {
+  it("disables a menu rename with multiple cursors", async () => {
     first.addCursorAtBufferPosition([0, 4]);
     spyOn(lumine.notifications, "addWarning");
     await lumine.commands.dispatch(lumine.workspace.getElement(), "refactor:rename");
-    expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
-      "Rename requires a single cursor or selection.",
-    );
+    expect(lumine.commands.canDispatch(first.getElement(), "refactor:rename")).toBe(false);
+    expect(lumine.notifications.addWarning).not.toHaveBeenCalled();
     expect(provider.rename).not.toHaveBeenCalled();
   });
   it("retires an unconfirmed request when another unrelated editor becomes active", async () => {
