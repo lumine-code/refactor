@@ -64,7 +64,7 @@ describe("Refactor command editor targets", () => {
       !path.basename(scratch).startsWith("refactor-target-")
     )
       throw new Error("Refactor fixture cleanup escaped its private temporary root");
-    fs.rmSync(scratch, { recursive: true, force: true });
+    await fs.promises.rm(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   });
   function provide() {
     lease = lumine.packages.serviceHub.provide("refactor.provider", "1.0.0", provider);
