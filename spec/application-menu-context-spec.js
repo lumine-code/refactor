@@ -1,4 +1,9 @@
 describe("refactor application menu document context", () => {
+  // Analysis fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, first, second, extra, button, cell, notebook, lease, lookup;
   beforeEach(async () => {
     jasmine.useRealClock();

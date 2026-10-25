@@ -23,6 +23,11 @@ const notificationSummaries = () =>
   lumine.notifications.getNotifications().map((n) => `${n.getType()}: ${n.getMessage()}`);
 
 describe("refactor", () => {
+  // Analysis fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let mainModule;
   let providerDisposable;
   let tempDir;

@@ -10,6 +10,11 @@ beforeEach(() => {
 });
 
 describe("Refactor command editor targets", () => {
+  // Analysis fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let main, first, second, third, firstPane, scratch, temporary, lease, provider;
   beforeEach(async () => {
     jasmine.useRealClock();

@@ -4,6 +4,11 @@ const path = require("path");
 const { TextBuffer } = require("lumine");
 
 describe("refactor request ownership", () => {
+  // Analysis fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   let mainModule, packagePath, editor, directory, filePath, otherPath, providers;
 
   function deferred() {

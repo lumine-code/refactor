@@ -1,4 +1,9 @@
 describe("rename provider availability", () => {
+  // Analysis fixtures use a real grammar; None deliberately disables this package.
+  beforeEach(async () => {
+    await lumine.packages.activatePackage("language-text");
+  });
+
   it("uses target grammar metadata without requesting rename or initializing dialogs", async () => {
     jasmine.attachToDOM(lumine.workspace.getElement());
     const main = (await lumine.packages.activatePackage("refactor")).mainModule;
