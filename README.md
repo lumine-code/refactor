@@ -4,6 +4,8 @@ Rename symbols across the project via provider-backed edits.
 
 Place the cursor on a symbol and run the rename command. A provider (typically a language-server backend) computes every location that refers to the symbol, and the package applies the edits like a project-wide find-and-replace — transactionally, with one undo step per buffer.
 
+The rename dialog accepts complete symbols, placeholders and replacement names up to 4096 UTF-16 code units. An oversized prepared range is rejected before extracting or selecting its text; other edits supplied by a provider are independent of this dialog-input limit.
+
 ## Features
 
 - **Project-wide rename**: renames every reference the provider reports, across all affected files.

@@ -85,6 +85,27 @@ describe("refactor", () => {
     return provider;
   }
 
+  it("rejects oversized prepared symbol ranges before selection or text extraction", async () => {
+    editorA.setText("a".repeat(10000));
+    const originalRange = editorA.getSelectedBufferRange();
+    const provider = addProvider({
+      prepareRename: async () => ({
+        range: [
+          [0, 0],
+          [0, 10000],
+        ],
+      }),
+    });
+    const read = spyOn(editorA, "getTextInBufferRange").and.throwError("unbounded symbol read");
+    const prompt = spyOn(mainModule, "promptForName").and.resolveTo("new");
+    await mainModule.rename({ target: editorA.getElement() });
+    expect(read).not.toHaveBeenCalled();
+    expect(prompt).not.toHaveBeenCalled();
+    expect(provider.rename).not.toHaveBeenCalled();
+    expect(editorA.getSelectedBufferRange()).toEqual(originalRange);
+    expect(lumine.notifications.getNotifications().at(-1).getDetail()).toContain("4096");
+  });
+
   function resultFor(newName) {
     return { outcome: "edits", edits: editsFor(newName) };
   }
