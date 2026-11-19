@@ -29,11 +29,17 @@ In your `package.json`:
 
 ```ts
 type RefactorProvider = {
-  rename(editor: TextEditor, position: Point, newName: string): Promise<RenameResult | null>;
+  rename(
+    editor: TextEditor,
+    position: Point,
+    newName: string,
+    options?: RenameOptions,
+  ): Promise<RenameResult | null>;
 
   prepareRename?(
     editor: TextEditor,
     position: Point,
+    options?: RenameOptions,
   ): Promise<{ range: Range; placeholder?: string } | null>;
 
   grammarScopes?: string[];
@@ -41,8 +47,20 @@ type RefactorProvider = {
   packageName?: string;
 };
 
+type RenameOptions = {
+  signal: AbortSignal;
+  isCurrent(): boolean;
+  beforeMutation(): void;
+};
+
 type RenameResult =
-  | { outcome?: "edits"; edits: Map<string, TextEdit[]> }
+  | {
+      outcome?: "edits";
+      edits: Map<string, TextEdit[]>;
+      orderedEdits?: Map<string, TextEdit[][]>;
+      isCurrent?(): boolean;
+      dispose?(): void;
+    }
   | { outcome: "applied"; paths?: string[] }
   | { outcome: "aborted" };
 ```
@@ -96,9 +114,9 @@ Renaming is refused outright when the editor has multiple selections — you wil
 
 When no provider claims the grammar, the user gets an error notification naming the problem; the `refactor:list-providers` command shows which providers are registered and what they cover.
 
-The `edits` map is keyed by absolute file path. Returning `{ outcome: "applied" }` means the provider already performed its own file operations and owns their undo; `{ outcome: "aborted" }` ends the operation without trying another provider.
+The `edits` and `orderedEdits` maps are keyed by absolute file path. Put a file in `orderedEdits` when later batches use ranges relative to the text produced by the preceding batch. Each batch contains non-overlapping edits relative to that batch's input. Returning `{ outcome: "applied" }` means the provider already performed its own file operations and owns their undo. `{ outcome: "aborted" }` ends the operation without trying another provider.
 
-Preparation, prompts and provider responses belong to the current request, activation and editor context. Deactivation, a newer rename, a withdrawn provider or changed source context retires stale work. The provider API has no cancellation parameter: a provider may finish its own work, but retired returned edits and errors are ignored by this package.
+Preparation, prompts and provider responses belong to the current request, activation and editor context. Pass `options.signal` through asynchronous work so a retired request can stop promptly. Providers that apply edits themselves check `options.isCurrent()` and call `options.beforeMutation()` immediately before their first mutation. Providers returning edits can supply `isCurrent()` to validate their source snapshots just before commit, and `dispose()` to release those snapshots when the result has been used or retired.
 
 Unopened files are loaded before applying returned edits, and changed or newly opened targets invalidate that preparation. Once applying begins, the confirmed edits and saves finish; later deactivation suppresses the success UI rather than undoing already committed changes.
 

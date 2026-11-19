@@ -191,7 +191,11 @@ describe("refactor", () => {
       () => fs.readFileSync(pathC, "utf8") === "zzz ccc\n",
       "the unopened file to be renamed and saved",
     );
-    expect(provider.rename).toHaveBeenCalledWith(editorA, jasmine.anything(), "zzz");
+    const [target, point, newName, options] = provider.rename.calls.mostRecent().args;
+    expect(target).toBe(editorA);
+    expect(point).toBeDefined();
+    expect(newName).toBe("zzz");
+    expect(typeof options.signal.aborted).toBe("boolean");
     expect(findDialog()).toBeNull();
 
     // Open buffers are not saved by default.
@@ -203,6 +207,57 @@ describe("refactor", () => {
     expect(editorA.getText()).toBe("aaa bbb aaa\n");
     editorB.undo();
     expect(editorB.getText()).toBe("xxx aaa\n");
+  });
+
+  it("applies ordered edits against each preceding batch and saves closed files", async () => {
+    const edit = (oldRange, newText) => ({ oldRange, newText });
+    const batches = [
+      [
+        edit(
+          [
+            [0, 0],
+            [0, 0],
+          ],
+          "// a\n",
+        ),
+        edit(
+          [
+            [0, 0],
+            [0, 0],
+          ],
+          "// b\n",
+        ),
+      ],
+      [
+        edit(
+          [
+            [2, 0],
+            [2, 3],
+          ],
+          "renamed",
+        ),
+      ],
+    ];
+    addProvider({
+      rename: async () => ({
+        edits: new Map(),
+        orderedEdits: new Map([
+          [pathA, batches],
+          [pathC, batches],
+        ]),
+      }),
+    });
+    spyOn(mainModule, "promptForName").and.resolveTo("renamed");
+
+    await mainModule.rename({ target: editorA.getElement() });
+
+    expect(editorA.getText()).toBe("// a\n// b\nrenamed bbb aaa\n");
+    expect(fs.readFileSync(pathC, "utf8")).toBe("// a\n// b\nrenamed ccc\n");
+    expect(lumine.workspace.getTextEditors().some((editor) => editor.getPath() === pathC)).toBe(
+      false,
+    );
+    editorA.undo();
+    expect(editorA.getText()).toBe("aaa bbb aaa\n");
   });
 
   it("uses prepareRename to pre-select the symbol and prefill the placeholder", async () => {
